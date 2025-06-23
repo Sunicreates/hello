@@ -1,16 +1,138 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
-  <title>replit</title>
-  <link href="style.css" rel="stylesheet" type="text/css" />
+  <title>FBX Animation Viewer</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #111; }
+    #loading {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-family: Arial;
+      font-size: 18px;
+      text-align: center;
+    }
+    #progress {
+      width: 300px;
+      margin-top: 20px;
+    }
+  </style>
 </head>
-
 <body>
-  Hello world
-  <script src="script.js"></script>
-</body>
+  <div id="loading">
+    <div>Loading 3D viewer...</div>
+    <div id="status">Initializing</div>
+    <progress id="progress" value="0" max="100"></progress>
+  </div>
 
+  <!-- Required libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fflate@0.7.4/umd/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/FBXLoader.js"></script>
+
+  <script>
+    // Debug and status system
+    const statusEl = document.getElementById('status');
+    const progressEl = document.getElementById('progress');
+
+    
+    function updateStatus(msg, progress = null) {
+      statusEl.textContent = msg;
+      if (progress !== null) {
+        progressEl.value = progress;
+      }
+      console.log(msg);
+    }
+
+    // Main Three.js implementation
+    function init() {
+      updateStatus("Initializing Three.js...", 10);
+      
+      // Verify required libraries are loaded
+      if (!window.THREE || !window.fflate) {
+        updateStatus("ERROR: Required libraries not loaded", 100);
+        return;
+      }
+
+      // Scene setup
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x222222);
+
+      
+      // Camera setup
+      const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 1.5, 5);
+      
+      // Renderer setup
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+      
+      // Lighting
+      scene.add(new THREE.AmbientLight(0x404040));
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+      dirLight.position.set(1, 1, 1);
+      scene.add(dirLight);
+      
+      // Add a grid helper
+      scene.add(new THREE.GridHelper(10, 10));
+      
+      updateStatus("Loading FBX file...", 30);
+      
+      // Initialize FBXLoader
+      const fbxLoader = new THREE.FBXLoader();
+      const clock = new THREE.Clock();
+      let mixer;
+      
+      // Load FBX file
+      fbxLoader.load(
+        'Chicken Dance.fbx',
+        (object) => {
+          updateStatus("FBX loaded successfully!", 80);
+          
+          // Adjust model scale and position
+          object.scale.set(1, 1, 1);
+          object.position.set(0, 0, 0);
+          scene.add(object);
+          
+          // Check for animations
+          if (object.animations && object.animations.length > 0) {
+            updateStatus(`Found ${object.animations.length} animations`, 90);
+            
+            // Setup animation mixer
+            mixer = new THREE.AnimationMixer(object);
+            const action = mixer.clipAction(object.animations[0]);
+            action.play();
+            
+            updateStatus("Playing animation...", 100);
+            document.getElementById('loading').style.display = 'none';
+          } else {
+            updateStatus("No animations found in FBX", 100);
+          }
+        },
+        (xhr) => {
+          const percent = (xhr.loaded / xhr.total) * 100;
+          updateStatus(`Loading FBX: ${Math.round(percent)}%`, 30 + (percent * 0.5));
+        },
+        (error) => {
+          updateStatus(`ERROR: ${error.message}`, 100);
+          console.error(error);
+        }
+      );
+      
+      // Animation loop
+      function animate() {
+        requestAnimationFrame(animate);
+        if (mixer) mixer.update(clock.getDelta());
+        renderer.render(scene, camera);
+      }
+      animate();
+    }
+
+    // Start initialization when all libraries are loaded
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
 </html>
