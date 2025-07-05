@@ -1,162 +1,652 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>FBX Animation Viewer</title>
+  <title>3D Dance Party</title>
   <style>
-    body { margin: 0; overflow: hidden; background: #111; }
-    #loading {
-      position: fixed;
+    body { 
+      margin: 0; 
+      overflow: hidden; 
+      font-family: 'Arial', sans-serif;
+    }
+    
+    #ui-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 100;
+    }
+    
+    .panel {
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 10px;
+      pointer-events: auto;
+    }
+    
+    #login-panel {
+      width: 300px;
+      position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      color: white;
-      font-family: Arial;
-      font-size: 18px;
-      text-align: center;
     }
-    #progress {
-      width: 300px;
-      margin-top: 20px;
+    
+    #social-panel {
+      width: 250px;
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      display: none;
     }
+    
+    #chat-panel {
+      width: 250px;
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      display: none;
+      height: 300px;
+      font-family: 'Rubik Glitch', sans-serif;
+    }
+    
     #controls {
       position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 10;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
     }
-    #controls button {
-      margin-right: 10px;
-      font-size: 14px;
+    
+    #user-list {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    
+    .user-item {
+      padding: 5px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    
+    .user-item:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .user-item.selected {
+      background: rgba(0, 150, 255, 0.5);
+    }
+    
+    #chat-messages {
+      height: 200px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+    
+    .message {
+      margin: 5px 0;
+      word-wrap: break-word;
     }
   </style>
 </head>
 <body>
+  <!-- UI Elements -->
+  <div id="ui-container">
+    <div id="login-panel" class="panel">
+      <h2>WeLcome to Buddyyyyyy</h2>
+      <div>
+        <label for="username-input">Buddy Name:</label>
+        <input type="text" id="username-input" placeholder="Choose your name">
+      </div>
+      <div style="margin-top: 15px;">
+        <button id="login-button">Connect</button>
+      </div>
+    </div>
+    
+    <div id="social-panel" class="panel">
+      <h3>Online Dancers</h3>
+      <div id="user-list"></div>
+    </div>
+    
+    <div id="chat-panel" class="panel">
+      <h3>Chat</h3>
+      <div id="chat-messages"></div>
+      <input type="text" id="chat-input" placeholder="Type a message...">
+      <button id="send-button">Send</button>
+    </div>
+    
+    <div id="controls" class="panel">
+      <h3>Dance Moves</h3>
+      <div>
+        <button data-animation="Chicken Dance.fbx">C</button>
+        <button data-animation="Jumping Down.fbx">J</button>
+        <button data-animation="Laying.fbx">L</button>
+        <button data-animation="Sitting Laughing.fbx">S</button>
+        <button data-animation="Standing Greeting.fbx">H</button>
+      </div>
+    </div>
+    
+    <!-- Add this below the other panels -->
+    <div id="ai-chat-panel" class="panel" style="position: absolute; bottom: 60px; left: 10px; width: 300px; display: none;">
+      <h3>Talk with Buddy</h3>
+      <div id="ai-chat-messages" style="height: 150px; overflow-y: auto; margin-bottom: 10px;"></div>
+      <div style="display: flex;">
+        <input type="text" id="ai-chat-input" placeholder="Chat with Buddy..." style="flex-grow: 1;">
+        <button id="ai-send-button" style="margin-left: 5px;">Send</button>
+      </div>
+    </div>
+  </div>
 
+  <!-- Loading Screen -->
   <div id="loading">
     <div>Loading 3D viewer...</div>
     <div id="status">Initializing</div>
     <progress id="progress" value="0" max="100"></progress>
   </div>
 
-  <div id="controls">
-    <button data-file="Chicken Dance.fbx">lets Dance</button>
-    <button data-file="Laying.fbx">Good night ! I am going to Sleep</button>
-    <button data-file="Jumping Down.fbx">I am jumping</button>
-    <button data-file="Sitting Laughing.fbx">I made a joke</button>
-  </div>
-
-  <!-- Required libraries -->
+  <!-- Three.js will render here -->
+  
+  <!-- Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/fflate@0.7.4/umd/index.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/FBXLoader.js"></script>
-
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  
   <script>
-    const statusEl = document.getElementById('status');
-    const progressEl = document.getElementById('progress');
-
-
-    let scene, camera, renderer, mixer, fbxLoader, dirLight, clock;
-
-    function updateStatus(msg, progress = null) {
-      statusEl.textContent = msg;
-      if (progress !== null) {
-        progressEl.value = progress;
-      }
-      console.log(msg);
-    }
-
-    function loadModel(fileName) {
-      updateStatus(`Loading ${fileName}...`, 30);
-      
-
-      fbxLoader.load(
-        fileName,
-        (object) => {
-          if (mixer) mixer.stopAllAction();
-          scene.clear();
-          scene.add(new THREE.GridHelper(10, 10));
-          scene.add(new THREE.AmbientLight(0x404040));
-          dirLight.position.set(1, 1, 1);
-          scene.add(dirLight);
-
-          object.scale.set(0.5, 0.5, 0.5);
-          object.position.set(0, 0, 0);
-          scene.add(object);
-          
-          const yellowMaterial = new THREE.MeshStandardMaterial({ color: 0xffff00 });
-    object.traverse(child => {
-      if (child.isMesh) {
-        child.material = yellowMaterial;
-      }
+    // Global variables
+    let scene, camera, renderer, mixer, clock;
+    let avatarModels = {};
+    let currentUser = null;
+    let selectedUser = null;
+    let lastPosition = null;
+    let nameLabels = {}; // Store username labels above avatars
+    let discoLights = []; // Store disco lights
+    let isDiscoMode = false; // Track if disco mode is active
+    const socket = io('http://localhost:3000', {
+      withCredentials: true,
+      transports: ['websocket'] // Force WebSocket transport
     });
-
-    scene.add(object);
-
-
-          if (object.animations && object.animations.length > 0) {
-            mixer = new THREE.AnimationMixer(object);
-            const action = mixer.clipAction(object.animations[0]);
-            action.play();
-
-            updateStatus(`Playing ${fileName}`, 100);
-            document.getElementById('loading').style.display = 'none';
-          } else {
-            updateStatus(`No animations found in ${fileName}`, 100);
-          }
-        },
-        (xhr) => {
-          if (xhr.total > 0) {
-            const percent = (xhr.loaded / xhr.total) * 100;
-            updateStatus(`Loading FBX: ${Math.round(percent)}%`, 30 + (percent * 0.5));
-          }
-        },
-        (error) => {
-          updateStatus(`ERROR loading ${fileName}: ${error.message}`, 100);
-          console.error(error);
-        }
-      );
-    }
-
-    function init() {
-      // Initialize core components
+    
+    // Initialize the 3D scene
+    function initScene() {
+      // Scene setup
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0xffffff); // white
+      scene.background = new THREE.Color(0x000000);
+      
+      // Camera setup - position it to see the line of avatars
       camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-      camera.position.set(0, 1.5, 5);
-
+      camera.position.set(0, 2.5, 8);
+      camera.lookAt(0, 2, 0);
+      
+      // Renderer setup
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.body.appendChild(renderer.domElement);
-
-      fbxLoader = new THREE.FBXLoader();
-      dirLight = new THREE.DirectionalLight(0xffffff, 1);
-      clock = new THREE.Clock();
-
-      scene.add(new THREE.AmbientLight(0x404040));
-      dirLight.position.set(1, 1, 1);
-      scene.add(dirLight);
+      
+      // Lighting
+      const ambientLight = new THREE.AmbientLight(0x404040);
+      scene.add(ambientLight);
+      
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+      directionalLight.position.set(1, 1, 1);
+      scene.add(directionalLight);
+      
+      // Grid helper
       scene.add(new THREE.GridHelper(10, 10));
-
-      // Handle model switching via buttons
-      document.querySelectorAll('#controls button').forEach(btn => {
+      
+      // Clock for animations
+      clock = new THREE.Clock();
+      
+      // Handle window resize
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    }
+    
+    // Function to create disco lights
+    function createDiscoLights() {
+      const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00];
+      
+      for (let i = 0; i < colors.length; i++) {
+        const light = new THREE.PointLight(colors[i], 1, 10);
+        light.position.set(0, 3, Math.cos(i) * 3);
+        scene.add(light);
+        discoLights.push(light);
+      }
+    }
+    
+    // Function to remove disco lights
+    function removeDiscoLights() {
+      discoLights.forEach(light => {
+        scene.remove(light);
+      });
+      discoLights = [];
+    }
+    
+    // Function to animate disco lights
+    function animateDiscoLights() {
+      const time = clock.getElapsedTime();
+      
+      discoLights.forEach((light, index) => {
+        light.position.x = Math.sin(time + index) * 5;
+        light.position.z = Math.cos(time + index) * 5;
+        light.intensity = Math.abs(Math.sin(time * 2 + index)); // Pulsing effect
+      });
+    }
+    
+    // Function to create username label
+    function createUsernameLabel(username) {
+      // Create canvas for text
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.width = 256;
+      canvas.height = 64;
+      
+      // Set text style
+      context.fillStyle = 'white';
+      context.font = '24px Arial';
+      context.textAlign = 'center';
+      context.fillText(username, 128, 32);
+      
+      // Create texture from canvas
+      const texture = new THREE.CanvasTexture(canvas);
+      
+      // Create sprite material
+      const spriteMaterial = new THREE.SpriteMaterial({ 
+        map: texture,
+        transparent: true,
+        opacity: 0.8
+      });
+      
+      // Create sprite
+      const sprite = new THREE.Sprite(spriteMaterial);
+      sprite.scale.set(2, 0.5, 1);
+      sprite.position.set(0, 2, 0); // Position above avatar
+      
+      return sprite;
+    }
+    
+    // Function to update username label position
+    function updateUsernameLabel(username) {
+      if (nameLabels[username] && avatarModels[username]) {
+        const avatar = avatarModels[username].model;
+        const label = nameLabels[username];
+        
+        // Position label above avatar
+        label.position.set(
+          avatar.position.x,
+          avatar.position.y + 5,
+          avatar.position.z
+        );
+        
+        // Make label always face camera
+        label.lookAt(camera.position);
+      }
+    }
+    
+    // Function to add username label
+    function addUsernameLabel(username) {
+      // Only show labels for other users (not current user)
+      if (username !== currentUser) {
+        const label = createUsernameLabel(username);
+        nameLabels[username] = label;
+        scene.add(label);
+      }
+    }
+    
+    // Function to remove username label
+    function removeUsernameLabel(username) {
+      if (nameLabels[username]) {
+        scene.remove(nameLabels[username]);
+        delete nameLabels[username];
+      }
+    }
+    
+    // Modify the loadAvatarModel function to use server-provided positions
+    function loadAvatarModel(username, animationFile) {
+      const loader = new THREE.FBXLoader();
+      
+      loader.load(
+        animationFile,
+        (object) => {
+          try {
+            object.scale.set(1, 1, 1);
+            
+            // Material setup
+            object.traverse((child) => {
+              if (child.isMesh) {
+                child.material = new THREE.MeshStandardMaterial({
+                  color: username === currentUser ? 0xFFFF00 : 0x00FF00,
+                  roughness: 0.8
+                });
+              }
+            });
+            
+            // Create or update model
+            if (!avatarModels[username]) {
+              avatarModels[username] = { model: object, mixer: null, currentAnimation: animationFile };
+            } else {
+              scene.remove(avatarModels[username].model);
+              avatarModels[username].model = object;
+              avatarModels[username].currentAnimation = animationFile;
+            }
+            
+            scene.add(object);
+            
+            // Add username label for other users
+            addUsernameLabel(username);
+            
+            // Animation setup
+            if (object.animations?.length > 0) {
+              avatarModels[username].mixer = new THREE.AnimationMixer(object);
+              const action = avatarModels[username].mixer.clipAction(object.animations[0]);
+              action.play();
+            }
+            
+            updateStatus(`${username} loaded`, 100);
+          } catch (error) {
+            console.error('Model processing error:', error);
+          }
+        },
+        (xhr) => {
+          const percent = (xhr.loaded / xhr.total) * 100;
+          updateStatus(`Loading ${username}: ${Math.round(percent)}%`, percent);
+        },
+        (error) => {
+          console.error(`Model load error for ${username}:`, error);
+        }
+      );
+    }
+    
+    // Update status display
+    function updateStatus(msg, progress = null) {
+      const statusEl = document.getElementById('status');
+      const progressEl = document.getElementById('progress');
+      
+      if (statusEl) statusEl.textContent = msg;
+      if (progressEl && progress !== null) progressEl.value = progress;
+    }
+    
+    // Add to animation loop
+    function animate() {
+      requestAnimationFrame(animate);
+      
+      const delta = clock.getDelta();
+      
+      // Update all mixers
+      Object.values(avatarModels).forEach(avatar => {
+        if (avatar.mixer) {
+          avatar.mixer.update(delta);
+        }
+      });
+      
+      // Update username label positions
+      Object.keys(nameLabels).forEach(username => {
+        updateUsernameLabel(username);
+      });
+      
+      // Animate disco lights if active
+      if (isDiscoMode) {
+        animateDiscoLights();
+      }
+      
+      // Send position updates (local user only)
+      if (currentUser && avatarModels[currentUser]) {
+        const model = avatarModels[currentUser].model;
+        const newPosition = model.position.clone();
+        
+        if (!lastPosition || lastPosition.distanceTo(newPosition) > 0.01) {
+          socket.emit('avatar_position', {
+            x: newPosition.x,
+            y: newPosition.y,
+            z: newPosition.z
+          });
+          lastPosition = newPosition;
+        }
+      }
+      
+      renderer.render(scene, camera);
+    }
+    
+    // Initialize the application
+    function init() {
+      initScene();
+      animate();
+      setupEventListeners();
+      
+      // Hide loading screen when ready
+      setTimeout(() => {
+        document.getElementById('loading').style.display = 'none';
+      }, 500);
+    }
+    
+    // Set up event listeners
+    function setupEventListeners() {
+      // Login button
+      document.getElementById('login-button').addEventListener('click', () => {
+        const username = document.getElementById('username-input').value.trim();
+        if (username) {
+          socket.emit('register', username);
+        }
+      });
+      
+      // Dance move buttons
+      document.querySelectorAll('#controls button[data-animation]').forEach(btn => {
         btn.addEventListener('click', () => {
-          const file = btn.getAttribute('data-file');
-          loadModel(file);
+          const animationFile = btn.getAttribute('data-animation');
+          socket.emit('change_animation', animationFile);
+        });
+      });
+      
+      // Chat send button
+      document.getElementById('send-button').addEventListener('click', sendChatMessage);
+      document.getElementById('chat-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendChatMessage();
+      });
+      
+      // Socket.io events
+      socket.on('registration_success', () => {
+        currentUser = document.getElementById('username-input').value.trim();
+        document.getElementById('login-panel').style.display = 'none';
+        document.getElementById('social-panel').style.display = 'block';
+        document.getElementById('chat-panel').style.display = 'block';
+        document.getElementById('controls').style.display = 'block';
+        
+        // Load default avatar
+        loadAvatarModel(currentUser, 'Chicken Dance.fbx');
+      });
+      
+      socket.on('registration_failed', (msg) => {
+        alert(`Registration failed: ${msg}`);
+      });
+      
+      socket.on('user_list', (users) => {
+        const userListEl = document.getElementById('user-list');
+        userListEl.innerHTML = '';
+        
+        users.forEach(user => {
+          if (user !== currentUser) {
+            const userItem = document.createElement('div');
+            userItem.className = 'user-item';
+            userItem.textContent = user;
+            userItem.addEventListener('click', () => {
+              document.querySelectorAll('.user-item').forEach(item => {
+                item.classList.remove('selected');
+              });
+              userItem.classList.add('selected');
+              selectedUser = user;
+            });
+            userListEl.appendChild(userItem);
+          }
+        });
+      });
+      
+      // Add to socket event listeners
+      socket.on('world_state', (worldState) => {
+        console.log('Received world state:', worldState);
+        
+        // Check if anyone is doing chicken dance
+        let hasChickenDance = false;
+        Object.entries(worldState).forEach(([username, userData]) => {
+          if (userData.animation === 'Chicken Dance.fbx') {
+            hasChickenDance = true;
+          }
+        });
+        
+        // Activate disco mode if chicken dance is present
+        if (hasChickenDance && !isDiscoMode) {
+          isDiscoMode = true;
+          createDiscoLights();
+          console.log('Disco mode activated from world state! 🕺');
+        }
+        
+        // Load all existing users' avatars
+        Object.entries(worldState).forEach(([username, userData]) => {
+          if (username !== currentUser) {
+            loadAvatarModel(username, userData.animation);
+            
+            // Set initial position
+            if (avatarModels[username]) {
+              avatarModels[username].model.position.set(
+                userData.position.x,
+                userData.position.y,
+                userData.position.z
+              );
+            }
+          }
         });
       });
 
-      // Load default model
-      loadModel('Chicken Dance.fbx');
+      // Update avatar_updated handler
+      socket.on('avatar_updated', (data) => {
+        console.log(`Avatar updated for ${data.username} to ${data.animation}`);
+        
+        // Check if anyone is doing chicken dance to activate disco mode
+        let hasChickenDance = false;
+        Object.values(avatarModels).forEach(avatar => {
+          if (avatar.currentAnimation === 'Chicken Dance.fbx') {
+            hasChickenDance = true;
+          }
+        });
+        
+        // Check if the new animation is chicken dance
+        if (data.animation === 'Chicken Dance.fbx') {
+          hasChickenDance = true;
+        }
+        
+        // Toggle disco mode based on chicken dance presence
+        if (hasChickenDance && !isDiscoMode) {
+          isDiscoMode = true;
+          createDiscoLights();
+          console.log('Disco mode activated! 🕺');
+        } else if (!hasChickenDance && isDiscoMode) {
+          isDiscoMode = false;
+          removeDiscoLights();
+          console.log('Disco mode deactivated! 😴');
+        }
+        
+        if (avatarModels[data.username]) {
+          const avatar = avatarModels[data.username];
+          
+          // Store current animation
+          avatar.currentAnimation = data.animation;
+          
+          // 1. Stop current animation
+          if (avatar.mixer) {
+            avatar.mixer.stopAllAction();
+          }
+          
+          // 2. Load new animation without replacing the entire model
+          const loader = new THREE.FBXLoader();
+          loader.load(
+            data.animation,
+            (animObject) => {
+              // 3. Transfer animations to existing model
+              avatar.model.animations = animObject.animations;
+              
+              // 4. Recreate mixer with new animations
+              avatar.mixer = new THREE.AnimationMixer(avatar.model);
+              
+              // 5. Play animation if available
+              if (animObject.animations && animObject.animations.length > 0) {
+                const action = avatar.mixer.clipAction(animObject.animations[0]);
+                action.play();
+                console.log(`Playing ${data.animation} for ${data.username}`);
+              }
+              
+              // 6. Clean up temp object
+              animObject = null;
+            },
+            undefined,
+            (error) => console.error('Animation load error:', error)
+          );
+        } else {
+          // Load new avatar if it doesn't exist
+          loadAvatarModel(data.username, data.animation);
+        }
+      });
+      
+      socket.on('chat_message', (data) => {
+        const chatMessages = document.getElementById('chat-messages');
+        const messageEl = document.createElement('div');
+        messageEl.className = 'message';
+        messageEl.innerHTML = `<strong>${data.username}:</strong> ${data.message}`;
+        chatMessages.appendChild(messageEl);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      });
+      
+      // Handle user disconnections
+      socket.on('user_disconnected', (username) => {
+        if (avatarModels[username]) {
+          scene.remove(avatarModels[username].model);
+          delete avatarModels[username];
+        }
+        
+        // Remove username label
+        removeUsernameLabel(username);
+        
+        // Update UI
+        const userItems = document.querySelectorAll('.user-item');
+        userItems.forEach(item => {
+          if (item.textContent === username) {
+            item.remove();
+          }
+        });
+      });
 
-      // Animation loop
-      function animate() {
-        requestAnimationFrame(animate);
-        if (mixer) mixer.update(clock.getDelta());
-        renderer.render(scene, camera);
-      }
-      animate();
+      // Handle position updates from server
+      socket.on('avatar_position_update', (data) => {
+        if (avatarModels[data.username]) {
+          avatarModels[data.username].model.position.set(
+            data.position.x,
+            data.position.y,
+            data.position.z
+          );
+        }
+      });
     }
-
+    
+    // Send chat message
+    function sendChatMessage() {
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
+      
+      if (message && currentUser) {
+        socket.emit('chat_message', {
+          username: currentUser,
+          message: message
+        });
+        input.value = '';
+      }
+    }
+    
+    // Start the application when DOM is loaded
     document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
