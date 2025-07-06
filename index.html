@@ -1,12 +1,20 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>3D Dance Party</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="3D Multiplayer Dance Party with Buddy - Chat, Dance, and Have Fun!">
+    <meta name="theme-color" content="#4a86e8">
+    <link rel="icon" type="image/png" href="Buddy.png">
+    <title>Buddy.io</title>
   <style>
     body { 
       margin: 0; 
       overflow: hidden; 
       font-family: 'Arial', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      touch-action: manipulation;
     }
     
     #ui-container {
@@ -20,38 +28,106 @@
     }
     
     .panel {
-      background: rgba(0, 0, 0, 0.7);
-      color: white;
-      border-radius: 8px;
-      padding: 15px;
+  background: rgba(20, 20, 20, 0.85); /* deeper black with subtle transparency */
+  color: #e0e8e0; /* Minecraft console green */
+  border: 2px solid #333; /* adds a harder edge */
+  border-radius: 6px;
+  padding: 20px;
       margin: 10px;
+  box-shadow: 0 0 12px #d8dbd8;
       pointer-events: auto;
+  text-align: center;
     }
     
     #login-panel {
-      width: 300px;
+  width: 320px;
       position: absolute;
-      top: 50%;
+  top: 45%; /* Moved up from 50% */
       left: 50%;
-      transform: translate(-50%, -50%);
+  transform: translate(-50%, -45%);
     }
     
     #social-panel {
-      width: 250px;
+      width: 120px;
       position: absolute;
       left: 10px;
       top: 10px;
       display: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      padding: 15px;
+      text-align: center;
+      border-radius: 8px;
+      background: rgba(20, 20, 20, 0.85);
+      color: #e0e8e0;
+      border: 2px solid #333;
+      box-shadow: 0 0 12px #d8dbd8;
+    }
+    
+    #social-panel:hover {
+      background: rgba(30, 30, 30, 0.9);
+      transform: scale(1.05);
+    }
+    
+    #social-panel.expanded {
+      width: 250px;
+      background: rgba(20, 20, 20, 0.95);
     }
     
     #chat-panel {
-      width: 250px;
+      width: 120px;
       position: absolute;
       right: 10px;
       top: 10px;
       display: none;
-      height: 300px;
+      height: auto;
       font-family: 'Rubik Glitch', sans-serif;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      padding: 15px;
+      text-align: left;
+      border-radius: 8px;
+      background: rgba(20, 20, 20, 0.85);
+      color: #e0e8e0;
+      border: 2px solid #333;
+      box-shadow: 0 0 12px #d8dbd8;
+    }
+    
+    #chat-panel:hover {
+      background: rgba(30, 30, 30, 0.9);
+      transform: scale(1.05);
+    }
+    
+    #chat-panel.expanded {
+      width: 250px;
+      height: 300px;
+      background: rgba(20, 20, 20, 0.95);
+    }
+    
+    .panel-header {
+      font-weight: bold;
+      margin-bottom: 15px;
+      user-select: none;
+      font-size: 16px;
+      color: #4a86e8;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+      border-bottom: 2px solid #4a86e8;
+      padding-bottom: 8px;
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+    
+    /* Ensure chat content is left-aligned */
+    #chat-content {
+      text-align: left;
+    }
+    
+    .panel-content {
+      display: none;
+    }
+    
+    .panel-content.show {
+      display: block;
     }
     
     #controls {
@@ -85,49 +161,817 @@
       height: 200px;
       overflow-y: auto;
       margin-bottom: 10px;
+      padding: 10px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 6px;
+      border: 1px solid #444;
     }
     
     .message {
-      margin: 5px 0;
+      margin: 8px 0;
+      padding: 8px 12px;
       word-wrap: break-word;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      border-left: 3px solid #4a86e8;
+      font-size: 14px;
+      line-height: 1.4;
+      color: #e0e8e0;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+    
+    .message strong {
+      color: #4a86e8;
+      font-weight: bold;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+    }
+    
+    /* Chat input styling */
+    #chat-input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 2px solid #444;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.4);
+      color: #e0e8e0;
+      font-size: 14px;
+      font-family: 'Arial', sans-serif;
+      outline: none;
+      transition: all 0.3s ease;
+      margin-right: 8px;
+    }
+    
+    #chat-input:focus {
+      border-color: #4a86e8;
+      box-shadow: 0 0 8px rgba(74, 134, 232, 0.3);
+      background: rgba(0, 0, 0, 0.6);
+    }
+    
+    #chat-input::placeholder {
+      color: #888;
+      font-style: italic;
+    }
+    
+    /* Send button styling */
+    #send-button {
+      width: 35px;
+      height: 35px;
+      border: 2px solid #4a86e8;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4a86e8, #3a76d8);
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    #send-button:hover {
+      background: linear-gradient(135deg, #5a96f8, #4a86e8);
+      transform: scale(1.05);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    }
+    
+    #send-button:active {
+      transform: scale(0.95);
+    }
+    
+    /* Left-align Buddy's messages in the AI chat panel */
+    #ai-chat-panel .message {
+      text-align: left;
+    }
+    .ai-message {
+      text-align: left;
+    }
+    
+    /* AI Chat specific styling */
+    #ai-chat-panel {
+      background: rgba(20, 20, 20, 0.95);
+      border: 2px solid #4a86e8;
+      box-shadow: 0 0 15px rgba(74, 134, 232, 0.3);
+    }
+    
+    #ai-chat-panel h3 {
+      color: #4a86e8;
+      text-align: center;
+      margin-bottom: 15px;
+      font-size: 18px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+      border-bottom: 2px solid #4a86e8;
+      padding-bottom: 8px;
+    }
+    
+    #ai-chat-input {
+      width: calc(100% - 40px);
+      padding: 10px 12px;
+      border: 2px solid #444;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.4);
+      color: #e0e8e0;
+      font-size: 14px;
+      font-family: 'Arial', sans-serif;
+      outline: none;
+      transition: all 0.3s ease;
+      margin-bottom: 8px;
+    }
+    
+    #ai-chat-input:focus {
+      border-color: #4a86e8;
+      box-shadow: 0 0 8px rgba(74, 134, 232, 0.3);
+      background: rgba(0, 0, 0, 0.6);
+    }
+    
+    #ai-chat-input::placeholder {
+      color: #888;
+      font-style: italic;
+    }
+    
+    #ai-send-button {
+      width: 35px;
+      height: 35px;
+      border: 2px solid #4a86e8;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4a86e8, #3a76d8);
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    #ai-send-button:hover {
+      background: linear-gradient(135deg, #5a96f8, #4a86e8);
+      transform: scale(1.05);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+    }
+    
+    #ai-send-button:active {
+      transform: scale(0.95);
+    }
+    
+    /* Add new styles for mode toggle */
+    #mode-toggle-container {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      background: rgba(20, 20, 20, 0.85);
+      border: 2px solid #333;
+      border-radius: 25px;
+      padding: 5px;
+      box-shadow: 0 0 12px #d8dbd8;
+      pointer-events: auto;
+    }
+    
+    .mode-btn {
+      padding: 8px 20px;
+      border: none;
+      background: transparent;
+      color: #e0e8e0;
+      cursor: pointer;
+      border-radius: 20px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+    
+    .mode-btn.active {
+      background: #4a86e8;
+      box-shadow: 0 0 8px rgba(74, 134, 232, 0.7);
+    }
+    
+    .mode-btn:hover:not(.active) {
+      background: rgba(74, 134, 232, 0.3);
+    }
+    
+    .mode-indicator {
+      position: absolute;
+      top: 50%;
+      left: 10px;
+      transform: translateY(-50%);
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: #4CAF50;
+      box-shadow: 0 0 8px #4CAF50;
+    }
+    
+    .mode-indicator.single {
+      background-color: #FF9800;
+      box-shadow: 0 0 8px #FF9800;
+    }
+    
+    .mode-indicator.world {
+      background-color: #4CAF50;
+      box-shadow: 0 0 8px #4CAF50;
+    }
+    
+    .mode-label {
+      margin-left: 20px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      color: #e0e8e0;
+    }
+    
+    /* Responsive Design - Mobile First Approach */
+    
+    /* Small Mobile Screens (320px - 480px) */
+    @media screen and (max-width: 480px) {
+      #login-panel {
+        width: 90vw;
+        min-width: 140px;
+        max-width: 240px;
+        top: 38%;
+        transform: translate(-50%, -38%);
+        padding: 8px;
+      }
+      #login-panel h2 {
+        font-size: 15px;
+        margin-bottom: 8px;
+      }
+      #username-input {
+        width: 100%;
+        padding: 4px;
+        font-size: 11px;
+      }
+      #login-button {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+      #social-panel {
+        width: 18vw;
+        min-width: 40px;
+        max-width: 60px;
+        left: 2vw;
+        top: 2vw;
+        padding: 3px;
+      }
+      #social-panel.expanded {
+        width: 36vw;
+        min-width: 80px;
+        max-width: 110px;
+      }
+      #chat-panel {
+        width: 18vw;
+        min-width: 40px;
+        max-width: 60px;
+        right: 2vw;
+        top: 2vw;
+        padding: 3px;
+      }
+      #chat-panel.expanded {
+        width: 36vw;
+        min-width: 80px;
+        max-width: 110px;
+        height: 80vw;
+        max-height: 180px;
+      }
+      #ai-chat-panel {
+        width: 40vw;
+        min-width: 90px;
+        max-width: 130px;
+        left: 2vw;
+        bottom: 2vw;
+        padding: 3px;
+      }
+      #ai-chat-messages {
+        height: 40vw;
+        min-height: 30px;
+        max-height: 60px;
+      }
+      #ai-chat-panel h3 {
+        font-size: 11px;
+        margin-bottom: 4px;
+      }
+      #mode-toggle-container {
+        top: 1vw;
+        padding: 1px;
+        border-radius: 10px;
+      }
+      .mode-btn {
+        padding: 2px 5px;
+        font-size: 9px;
+      }
+      .mode-label {
+        font-size: 9px;
+        margin-left: 5px;
+        color: #e0e8e0;
+      }
+      .panel-header {
+        font-size: 10px;
+        margin-bottom: 4px;
+        padding-bottom: 2px;
+      }
+      #chat-messages {
+        height: 18vw;
+        min-height: 20px;
+        max-height: 40px;
+        padding: 2px;
+      }
+      .message {
+        font-size: 9px;
+        padding: 2px 4px;
+        margin: 1px 0;
+      }
+      #chat-input, #ai-chat-input {
+        padding: 2px 4px;
+        font-size: 9px;
+      }
+      #send-button, #ai-send-button {
+        width: 16px;
+        height: 16px;
+        font-size: 9px;
+      }
+      #user-list {
+        max-height: 40vw;
+        min-height: 20px;
+        max-height: 40px;
+      }
+      .user-item {
+        padding: 2px;
+        font-size: 9px;
+      }
+    }
+    
+    /* Medium Mobile Screens (481px - 768px) */
+    @media screen and (min-width: 481px) and (max-width: 768px) {
+      #login-panel {
+        width: 300px;
+        top: 45%;
+        transform: translate(-50%, -45%);
+      }
+      
+      #social-panel {
+        width: 90px;
+        left: 8px;
+        top: 8px;
+      }
+      
+      #social-panel.expanded {
+        width: 180px;
+      }
+      
+      #chat-panel {
+        width: 90px;
+        right: 8px;
+        top: 8px;
+      }
+      
+      #chat-panel.expanded {
+        width: 180px;
+        height: 220px;
+      }
+      
+      #ai-chat-panel {
+        width: 240px;
+        left: 8px;
+        bottom: 8px;
+      }
+      
+      #mode-toggle-container {
+        top: 8px;
+      }
+      
+      .mode-btn {
+        padding: 7px 15px;
+        font-size: 13px;
+      }
+      
+      #chat-messages {
+        height: 140px;
+      }
+      
+      .message {
+        font-size: 12px;
+      }
+    }
+    
+    /* Large Mobile/Tablet Screens (769px - 1024px) */
+    @media screen and (min-width: 769px) and (max-width: 1024px) {
+      #login-panel {
+        width: 320px;
+      }
+      
+      #social-panel {
+        width: 120px;
+        left: 10px;
+        top: 10px;
+      }
+      
+      #social-panel.expanded {
+        width: 240px;
+      }
+      
+      #chat-panel {
+        width: 120px;
+        right: 10px;
+        top: 10px;
+      }
+      
+      #chat-panel.expanded {
+        width: 240px;
+        height: 300px;
+      }
+      
+      #ai-chat-panel {
+        width: 300px;
+        left: 10px;
+        bottom: 10px;
+      }
+      
+      #mode-toggle-container {
+        top: 10px;
+      }
+      
+      .mode-btn {
+        padding: 8px 18px;
+        font-size: 14px;
+      }
+    }
+    
+    /* Desktop Screens (1025px and above) */
+    @media screen and (min-width: 1025px) {
+      #login-panel {
+        width: 350px;
+      }
+      
+      #social-panel {
+        width: 130px;
+        left: 15px;
+        top: 15px;
+      }
+      
+      #social-panel.expanded {
+        width: 260px;
+      }
+      
+      #chat-panel {
+        width: 130px;
+        right: 15px;
+        top: 15px;
+      }
+      
+      #chat-panel.expanded {
+        width: 260px;
+        height: 320px;
+      }
+      
+      #ai-chat-panel {
+        width: 320px;
+        left: 15px;
+        bottom: 15px;
+      }
+      
+      #mode-toggle-container {
+        top: 15px;
+      }
+      
+      .mode-btn {
+        padding: 10px 22px;
+        font-size: 15px;
+      }
+    }
+    
+    /* Landscape Mobile Orientation */
+    @media screen and (max-height: 500px) and (orientation: landscape) {
+      #login-panel {
+        top: 30%;
+        transform: translate(-50%, -30%);
+        padding: 10px;
+      }
+      
+      #login-panel h2 {
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+      
+      #ai-chat-panel {
+        bottom: 5px;
+        height: auto;
+      }
+      
+      #ai-chat-messages {
+        height: 80px;
+      }
+      
+      #chat-panel.expanded {
+        height: 200px;
+      }
+      
+      #chat-messages {
+        height: 120px;
+      }
+    }
+    
+    /* Touch-friendly improvements for mobile */
+    @media (hover: none) and (pointer: coarse) {
+      .mode-btn:hover {
+        background: rgba(74, 134, 232, 0.3);
+        transform: none;
+      }
+      
+      #send-button:hover, #ai-send-button:hover {
+        transform: none;
+      }
+      
+      .user-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      
+      #social-panel:hover, #chat-panel:hover {
+        transform: none;
+      }
+    }
+    
+    /* High DPI displays */
+    @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+      .panel {
+        border-width: 1px;
+      }
+      
+      #send-button, #ai-send-button {
+        border-width: 1px;
+      }
+    }
+    
+    /* Accessibility improvements */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+    
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      .panel {
+        background: rgba(10, 10, 10, 0.9);
+        border-color: #555;
+      }
+      
+      #chat-input, #ai-chat-input {
+        background: rgba(0, 0, 0, 0.6);
+        border-color: #555;
+      }
+    }
+    
+    /* Loading screen responsive styling */
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      z-index: 10000;
+      font-family: 'Arial', sans-serif;
+    }
+    
+    #loading div {
+      margin: 10px 0;
+      font-size: 18px;
+      text-align: center;
+    }
+    
+    #progress {
+      width: 200px;
+      height: 20px;
+      border-radius: 10px;
+      background: #333;
+      border: none;
+      outline: none;
+    }
+    
+    #progress::-webkit-progress-bar {
+      background: #333;
+      border-radius: 10px;
+    }
+    
+    #progress::-webkit-progress-value {
+      background: linear-gradient(90deg, #4a86e8, #3a76d8);
+      border-radius: 10px;
+    }
+    
+    #progress::-moz-progress-bar {
+      background: linear-gradient(90deg, #4a86e8, #3a76d8);
+      border-radius: 10px;
+    }
+    
+    /* Loading screen responsive */
+    @media screen and (max-width: 480px) {
+      #loading div {
+        font-size: 16px;
+        margin: 8px 0;
+      }
+      
+      #progress {
+        width: 150px;
+        height: 15px;
+      }
+    }
+    
+    @media screen and (min-width: 481px) and (max-width: 768px) {
+      #loading div {
+        font-size: 17px;
+      }
+      
+      #progress {
+        width: 180px;
+        height: 18px;
+      }
+    }
+    
+    @media screen and (max-width: 600px) {
+      body.mobile-login-active #social-panel,
+      body.mobile-login-active #chat-panel,
+      body.mobile-login-active #ai-chat-panel,
+      body.mobile-login-active #mode-toggle-container {
+        display: none !important;
+      }
+      /* Social and chat panels as small vertical buttons on the left */
+      #social-panel {
+        position: fixed !important;
+        top: 10vw !important;
+        left: 2vw !important;
+        width: 18vw !important;
+        min-width: 60px !important;
+        max-width: 90px !important;
+        height: 12vw !important;
+        min-height: 40px !important;
+        max-height: 60px !important;
+        border-radius: 14px !important;
+        font-size: 12px !important;
+        box-shadow: 0 2px 8px #0006 !important;
+        z-index: 2000 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      #chat-panel {
+        position: fixed !important;
+        top: 28vw !important;
+        left: 2vw !important;
+        width: 18vw !important;
+        min-width: 60px !important;
+        max-width: 90px !important;
+        height: 12vw !important;
+        min-height: 40px !important;
+        max-height: 60px !important;
+        border-radius: 14px !important;
+        font-size: 12px !important;
+        box-shadow: 0 2px 8px #0006 !important;
+        z-index: 2000 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      #social-panel.expanded, #chat-panel.expanded {
+        width: 60vw !important;
+        min-width: 120px !important;
+        max-width: 220px !important;
+        height: 30vh !important;
+        min-height: 90px !important;
+        max-height: 220px !important;
+        display: block !important;
+        align-items: flex-start !important;
+        justify-content: flex-start !important;
+        padding: 8px 8px 8px 8px !important;
+        text-align: left !important;
+      }
+      /* AI chat panel floating at bottom right */
+      #ai-chat-panel {
+        position: fixed !important;
+        bottom: 2vw !important;
+        right: 2vw !important;
+        width: 60vw !important;
+        min-width: 120px !important;
+        max-width: 320px !important;
+        height: 30vh !important;
+        min-height: 90px !important;
+        max-height: 220px !important;
+        border-radius: 18px !important;
+        font-size: 13px !important;
+        box-shadow: 0 2px 12px #0008 !important;
+        z-index: 2000 !important;
+        display: block !important;
+        background: rgba(20,20,20,0.92) !important;
+        margin: 0 !important;
+        padding: 10px 10px 10px 10px !important;
+      }
+      #ai-chat-panel h3, .panel-header {
+        font-size: 15px !important;
+        margin-bottom: 6px !important;
+        padding-bottom: 2px !important;
+        text-align: center !important;
+      }
+      #chat-messages, #ai-chat-messages {
+        max-height: 14vh !important;
+        min-height: 30px !important;
+        overflow-y: auto !important;
+        font-size: 12px !important;
+        padding: 4px 2px !important;
+        margin-bottom: 4px !important;
+      }
+      .message {
+        font-size: 12px !important;
+        padding: 3px 6px !important;
+        margin: 2px 0 !important;
+        border-radius: 7px !important;
+      }
+      #chat-content > div[style*="display: flex"], #ai-chat-panel > div[style*="display: flex"] {
+        display: flex !important;
+        gap: 4px !important;
+        align-items: center !important;
+        margin-top: 4px !important;
+      }
+      #chat-input, #ai-chat-input {
+        font-size: 12px !important;
+        padding: 6px 8px !important;
+        border-radius: 8px !important;
+        flex: 1 1 0% !important;
+      }
+      #send-button, #ai-send-button {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 14px !important;
+        border-radius: 50% !important;
+        min-width: 28px !important;
+        min-height: 28px !important;
+        margin: 0 !important;
+      }
+      /* Hide box shadows and borders for less clutter */
+      .panel, #ai-chat-panel, #chat-panel {
+        box-shadow: none !important;
+        border: none !important;
+      }
     }
   </style>
 </head>
 <body>
   <!-- UI Elements -->
   <div id="ui-container">
+    <!-- Add mode toggle bar -->
+    <div id="mode-toggle-container">
+      <div class="mode-indicator world" id="mode-indicator"></div>
+      <div class="mode-label">Mode:</div>
+      <button id="world-mode-btn" class="mode-btn active">World Mode</button>
+      <button id="single-mode-btn" class="mode-btn">Single Mode</button>
+    </div>
+    
     <div id="login-panel" class="panel">
-      <h2>WeLcome to Buddyyyyyy</h2>
+      <h2>WeLcome to Buddyyy !!</h2>
       <div>
-        <label for="username-input">Buddy Name:</label>
-        <input type="text" id="username-input" placeholder="Choose your name">
+        <label for="username-input">Buddy Name :</label>
+        <input type="text" id="username-input" placeholder="ABC....">
       </div>
       <div style="margin-top: 15px;">
-        <button id="login-button">Connect</button>
+        <button id="login-button">Talk to buddy</button>
       </div>
     </div>
     
     <div id="social-panel" class="panel">
-      <h3>Online Dancers</h3>
-      <div id="user-list"></div>
+      <div class="panel-header">Online Players</div>
+      <div class="panel-content" id="social-content">
+        <div id="user-list"></div>
+      </div>
     </div>
     
     <div id="chat-panel" class="panel">
-      <h3>Chat</h3>
-      <div id="chat-messages"></div>
-      <input type="text" id="chat-input" placeholder="Type a message...">
-      <button id="send-button">Send</button>
+      <div class="panel-header">Chat with online players</div>
+      <div class="panel-content" id="chat-content">
+        <div id="chat-messages"></div>
+        <div style="display: flex; align-items: center;">
+          <input type="text" id="chat-input" placeholder="Type a message...">
+          <button id="send-button">&#x27A4;</button>
+        </div>
+      </div>
     </div>
     
     <div id="controls" class="panel">
-      <h3>Dance Moves</h3>
-      <div>
-        <button data-animation="Chicken Dance.fbx">C</button>
-        <button data-animation="Jumping Down.fbx">J</button>
-        <button data-animation="Laying.fbx">L</button>
-        <button data-animation="Sitting Laughing.fbx">S</button>
-        <button data-animation="Standing Greeting.fbx">H</button>
-      </div>
+ 
+
     </div>
     
     <!-- Add this below the other panels -->
@@ -136,7 +980,7 @@
       <div id="ai-chat-messages" style="height: 150px; overflow-y: auto; margin-bottom: 10px;"></div>
       <div style="display: flex;">
         <input type="text" id="ai-chat-input" placeholder="Chat with Buddy..." style="flex-grow: 1;">
-        <button id="ai-send-button" style="margin-left: 5px;">Send</button>
+        <button id="ai-send-button" style="margin-left: 5px;">&#x27A4;</button>
       </div>
     </div>
   </div>
@@ -157,6 +1001,11 @@
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   
   <script>
+    // Add this at the top of your script (before DOMContentLoaded)
+    if (window.innerWidth <= 600) {
+      document.body.classList.add('mobile-login-active');
+    }
+
     // Global variables
     let scene, camera, renderer, mixer, clock;
     let avatarModels = {};
@@ -166,6 +1015,21 @@
     let nameLabels = {}; // Store username labels above avatars
     let discoLights = []; // Store disco lights
     let isDiscoMode = false; // Track if disco mode is active
+    let aiChatEnabled = false;
+    let isAnimationTimerActive = false; // Flag to prevent infinite loops
+    let currentMode = 'single'; // 'world' or 'single'
+    const animationCommands = {
+      'dance': 'C',
+      'jump': 'J',
+      'lay': 'L',
+      'sleep': 'L',
+      'laugh': 'S',
+      'hello': 'H',
+      'greet': 'H',
+      'hi': 'H',
+      'idle': 'I',
+      'stand': 'I'
+    };
     const socket = io('http://localhost:3000', {
       withCredentials: true,
       transports: ['websocket'] // Force WebSocket transport
@@ -240,6 +1104,34 @@
       });
     }
     
+    // Add this function
+    function createDanceParticles(intensity) {
+      const particleCount = Math.floor(50 * intensity);
+      const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00];
+      
+      for (let i = 0; i < particleCount; i++) {
+        const geometry = new THREE.SphereGeometry(0.1, 8, 8);
+        const material = new THREE.MeshBasicMaterial({
+          color: colors[Math.floor(Math.random() * colors.length)]
+        });
+        const particle = new THREE.Mesh(geometry, material);
+        
+        // Random position around the avatar
+        particle.position.set(
+          (Math.random() - 0.5) * 5,
+          Math.random() * 3,
+          (Math.random() - 0.5) * 5
+        );
+        
+        scene.add(particle);
+        
+        // Animate and remove
+        setTimeout(() => {
+          scene.remove(particle);
+        }, 2000);
+      }
+    }
+    
     // Function to create username label
     function createUsernameLabel(username) {
       // Create canvas for text
@@ -308,8 +1200,8 @@
       }
     }
     
-    // Modify the loadAvatarModel function to use server-provided positions
-    function loadAvatarModel(username, animationFile) {
+    // Modify the loadAvatarModel function to accept position
+    function loadAvatarModel(username, animationFile, position = null) {
       const loader = new THREE.FBXLoader();
       
       loader.load(
@@ -327,7 +1219,12 @@
                 });
               }
             });
-            
+
+            // Set position if provided
+            if (position) {
+              object.position.set(position.x, position.y, position.z);
+            }
+
             // Create or update model
             if (!avatarModels[username]) {
               avatarModels[username] = { model: object, mixer: null, currentAnimation: animationFile };
@@ -338,9 +1235,16 @@
             }
             
             scene.add(object);
-            
-            // Add username label for other users
             addUsernameLabel(username);
+            
+            // Compute bounding box and width for dynamic spacing
+            const bbox = new THREE.Box3().setFromObject(object);
+            const size = new THREE.Vector3();
+            bbox.getSize(size);
+            const avatarWidth = size.x;
+            
+            // Send the measured width to server
+            socket.emit('avatar_width', { username: username, width: avatarWidth });
             
             // Animation setup
             if (object.animations?.length > 0) {
@@ -348,8 +1252,6 @@
               const action = avatarModels[username].mixer.clipAction(object.animations[0]);
               action.play();
             }
-            
-            updateStatus(`${username} loaded`, 100);
           } catch (error) {
             console.error('Model processing error:', error);
           }
@@ -414,6 +1316,95 @@
       renderer.render(scene, camera);
     }
     
+    // Function to switch modes
+    function setMode(newMode) {
+      if (currentMode === newMode) return;
+      
+      currentMode = newMode;
+      
+      // Update UI elements
+      document.getElementById('world-mode-btn').classList.toggle('active', newMode === 'world');
+      document.getElementById('single-mode-btn').classList.toggle('active', newMode === 'single');
+      document.getElementById('mode-indicator').className = `mode-indicator ${newMode}`;
+      
+      // Notify server
+      socket.emit('set_mode', newMode);
+      
+      // Handle client-side changes
+      if (newMode === 'world') {
+        // Request fresh world state
+        socket.emit('request_world_state');
+        
+        // Reapply world mode positioning
+        Object.keys(avatarModels).forEach(username => {
+          if (username !== currentUser) {
+            socket.emit('request_user_position', username);
+          }
+        });
+      } else {
+        // Single mode - remove other avatars and reset current user position
+        Object.keys(avatarModels).forEach(username => {
+          if (username !== currentUser) {
+            scene.remove(avatarModels[username].model);
+            removeUsernameLabel(username);
+          }
+        });
+        
+        // Reset current user's avatar position to (0,0,0) in single mode
+        if (avatarModels[currentUser]) {
+          avatarModels[currentUser].model.position.set(0, 0, 0);
+        }
+      }
+    }
+    
+    // Function to show mode change notification
+    function showModeNotification(title, message) {
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(30, 30, 40, 0.9);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 10px;
+        border-left: 5px solid ${currentMode === 'world' ? '#4CAF50' : '#FF9800'};
+        font-family: Arial, sans-serif;
+        z-index: 1000;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        text-align: center;
+        max-width: 300px;
+        animation: fadeInOut 5s forwards;
+      `;
+      
+      notification.innerHTML = `
+        <div style="font-weight: bold; font-size: 18px; margin-bottom: 5px;">${title}</div>
+        <div>${message}</div>
+      `;
+      
+      document.body.appendChild(notification);
+      
+      // Add CSS for animation
+      const style = document.createElement('style');
+      style.innerHTML = `
+        @keyframes fadeInOut {
+          0% { opacity: 0; top: 40px; }
+          10% { opacity: 1; top: 60px; }
+          90% { opacity: 1; top: 60px; }
+          100% { opacity: 0; top: 40px; }
+        }
+      `;
+      document.head.appendChild(style);
+      
+      // Remove after animation completes
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 5000);
+    }
+    
     // Initialize the application
     function init() {
       initScene();
@@ -428,13 +1419,56 @@
     
     // Set up event listeners
     function setupEventListeners() {
+      // Mode toggle buttons
+      document.getElementById('world-mode-btn').addEventListener('click', () => setMode('world'));
+      document.getElementById('single-mode-btn').addEventListener('click', () => setMode('single'));
+      
       // Login button
       document.getElementById('login-button').addEventListener('click', () => {
         const username = document.getElementById('username-input').value.trim();
         if (username) {
           socket.emit('register', username);
+        }else {
+      // Show warning when no username is entered
+      const warningDiv = document.createElement('div');
+      warningDiv.style.cssText = `
+        position: fixed;
+        top: 30%;
+        left: 47.9%;
+        transform: translate(-50%, -50%);
+        background: rgba(128, 128, 128, 0.95); 
+        color: black;
+        padding: 5px 10px;
+        border-radius: 8px;
+        font-weight: bold;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      `;
+      const warningImage = document.createElement('img');
+      const spanText = document.createElement('span');
+      
+      warningImage.src = 'image.png'; // Fixed path - relative to HTML file
+      warningImage.style.width = '20px';
+      warningImage.style.height = '20px';
+      warningImage.style.marginRight = '8px';
+      warningImage.style.verticalAlign = 'middle';
+      
+      spanText.textContent = 'Please enter your Buddy Name';
+
+      warningDiv.appendChild(warningImage);
+      warningDiv.appendChild(spanText);
+
+      document.body.appendChild(warningDiv);
+
+// Remove warning after 3 seconds
+      setTimeout(() => {
+      if (warningDiv.parentNode) {
+          warningDiv.parentNode.removeChild(warningDiv);
         }
-      });
+        }, 3000);
+
+          }
+        });
       
       // Dance move buttons
       document.querySelectorAll('#controls button[data-animation]').forEach(btn => {
@@ -450,16 +1484,29 @@
         if (e.key === 'Enter') sendChatMessage();
       });
       
+      // AI Chat send button
+      document.getElementById('ai-send-button').addEventListener('click', sendAIChatMessage);
+      document.getElementById('ai-chat-input').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendAIChatMessage();
+      });
+      
       // Socket.io events
       socket.on('registration_success', () => {
         currentUser = document.getElementById('username-input').value.trim();
         document.getElementById('login-panel').style.display = 'none';
         document.getElementById('social-panel').style.display = 'block';
         document.getElementById('chat-panel').style.display = 'block';
-        document.getElementById('controls').style.display = 'block';
+        document.getElementById('ai-chat-panel').style.display = 'block';
+        document.getElementById('mode-toggle-container').style.display = 'flex';
         
         // Load default avatar
-        loadAvatarModel(currentUser, 'Chicken Dance.fbx');
+        loadAvatarModel(currentUser, 'Standing Idle.fbx');
+
+        // Remove the mobile-login-active class so UI panels show up
+        document.body.classList.remove('mobile-login-active');
+
+        // After showing the AI chat panel, add this line:
+        document.getElementById('ai-chat-messages').innerHTML = '<div class="message ai-message"><strong>Buddy:</strong> Welcome to Buddyyy</div>';
       });
       
       socket.on('registration_failed', (msg) => {
@@ -488,67 +1535,54 @@
       });
       
       // Add to socket event listeners
-      socket.on('world_state', (worldState) => {
-        console.log('Received world state:', worldState);
+      socket.on('world_state', async (worldState) => {
+        if (currentMode !== 'world') return;
         
-        // Check if anyone is doing chicken dance
-        let hasChickenDance = false;
-        Object.entries(worldState).forEach(([username, userData]) => {
-          if (userData.animation === 'Chicken Dance.fbx') {
-            hasChickenDance = true;
-          }
-        });
+        const loadPromises = Object.entries(worldState)
+          .filter(([username]) => username !== currentUser)
+          .map(([username, userData]) => 
+            loadAvatarModel(username, userData.animation, userData.position)
+          );
         
-        // Activate disco mode if chicken dance is present
-        if (hasChickenDance && !isDiscoMode) {
-          isDiscoMode = true;
-          createDiscoLights();
-          console.log('Disco mode activated from world state! 🕺');
-        }
-        
-        // Load all existing users' avatars
-        Object.entries(worldState).forEach(([username, userData]) => {
-          if (username !== currentUser) {
-            loadAvatarModel(username, userData.animation);
-            
-            // Set initial position
-            if (avatarModels[username]) {
-              avatarModels[username].model.position.set(
-                userData.position.x,
-                userData.position.y,
-                userData.position.z
-              );
-            }
-          }
-        });
+        await Promise.all(loadPromises);
+        updateDebugLabels();
       });
 
       // Update avatar_updated handler
       socket.on('avatar_updated', (data) => {
+        // Process updates for our own avatar in any mode
+        // Process updates for others only in world mode
+        if (data.username !== currentUser && currentMode !== 'world') return;
+        
         console.log(`Avatar updated for ${data.username} to ${data.animation}`);
         
-        // Check if anyone is doing chicken dance to activate disco mode
-        let hasChickenDance = false;
-        Object.values(avatarModels).forEach(avatar => {
-          if (avatar.currentAnimation === 'Chicken Dance.fbx') {
+        // Don't activate disco mode if this is triggered by the timer
+        if (isAnimationTimerActive && data.animation === 'Chicken Dance.fbx') {
+          console.log('Skipping disco mode activation (timer reset)');
+        } else {
+          // Check if anyone is doing chicken dance to activate disco mode
+          let hasChickenDance = false;
+          Object.values(avatarModels).forEach(avatar => {
+            if (avatar.currentAnimation === 'Chicken Dance.fbx') {
+              hasChickenDance = true;
+            }
+          });
+          
+          // Check if the new animation is chicken dance
+          if (data.animation === 'Chicken Dance.fbx') {
             hasChickenDance = true;
           }
-        });
-        
-        // Check if the new animation is chicken dance
-        if (data.animation === 'Chicken Dance.fbx') {
-          hasChickenDance = true;
-        }
-        
-        // Toggle disco mode based on chicken dance presence
-        if (hasChickenDance && !isDiscoMode) {
-          isDiscoMode = true;
-          createDiscoLights();
-          console.log('Disco mode activated! 🕺');
-        } else if (!hasChickenDance && isDiscoMode) {
-          isDiscoMode = false;
-          removeDiscoLights();
-          console.log('Disco mode deactivated! 😴');
+          
+          // Toggle disco mode based on chicken dance presence
+          if (hasChickenDance && !isDiscoMode) {
+            isDiscoMode = true;
+            createDiscoLights();
+            console.log('Disco mode activated! 🕺');
+          } else if (!hasChickenDance && isDiscoMode) {
+            isDiscoMode = false;
+            removeDiscoLights();
+            console.log('Disco mode deactivated! 😴');
+          }
         }
         
         if (avatarModels[data.username]) {
@@ -603,6 +1637,9 @@
       
       // Handle user disconnections
       socket.on('user_disconnected', (username) => {
+        // Only process if in world mode
+        if (currentMode !== 'world') return;
+        
         if (avatarModels[username]) {
           scene.remove(avatarModels[username].model);
           delete avatarModels[username];
@@ -621,7 +1658,52 @@
       });
 
       // Handle position updates from server
-      socket.on('avatar_position_update', (data) => {
+      socket.on('avatar_position_update', async (data) => {
+        // Only process if in world mode
+        if (currentMode !== 'world') return;
+        
+        if (avatarModels[data.username]) {
+          avatarModels[data.username].model.position.set(
+            data.position.x,
+            data.position.y,
+            data.position.z
+          );
+        } else {
+          await loadAvatarModel(data.username, 'Standing Idle.fbx', data.position);
+        }
+        updateDebugLabels();
+      });
+      
+      // Add this to socket.io events
+      socket.on('special_effect', (data) => {
+        if (data.type === 'disco') {
+          if (!isDiscoMode) {
+            isDiscoMode = true;
+            createDiscoLights();
+            console.log('Disco mode activated!');
+          }
+          
+          // Add some particles for fun
+          createDanceParticles(data.intensity);
+        }
+      });
+      
+      // Add new event to handle mode changes from server
+      socket.on('user_mode_changed', (data) => {
+        // If someone else switched to single mode, remove their avatar
+        if (data.mode === 'single' && data.username !== currentUser) {
+          if (avatarModels[data.username]) {
+            scene.remove(avatarModels[data.username].model);
+            delete avatarModels[data.username];
+          }
+          removeUsernameLabel(data.username);
+        }
+      });
+      
+      // Add new socket listener for position requests
+      socket.on('user_position_response', (data) => {
+        if (currentMode !== 'world') return;
+        
         if (avatarModels[data.username]) {
           avatarModels[data.username].model.position.set(
             data.position.x,
@@ -629,6 +1711,24 @@
             data.position.z
           );
         }
+      });
+
+      // Panel toggle functionality
+      document.getElementById('social-panel').addEventListener('click', toggleSocialPanel);
+      document.getElementById('chat-panel').addEventListener('click', toggleChatPanel);
+      
+      // Prevent chat input and send button from toggling the panel
+      document.getElementById('chat-input').addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+      
+      document.getElementById('send-button').addEventListener('click', (e) => {
+        e.stopPropagation();
+      });
+      
+      // Prevent user list clicks from toggling the social panel
+      document.getElementById('user-list').addEventListener('click', (e) => {
+        e.stopPropagation();
       });
     }
     
@@ -646,8 +1746,227 @@
       }
     }
     
+    // Add this new function
+    function sendAIChatMessage() {
+      const input = document.getElementById('ai-chat-input');
+      const message = input.value.trim();
+      
+      if (!message) return;
+      
+      // Create user message in AI chat
+      addAIChatMessage(message, true);
+      input.value = '';
+      
+      // Check for animation commands
+      const lowerMsg = message.toLowerCase();
+      let commandFound = false;
+      
+      for (const [keyword, cmd] of Object.entries(animationCommands)) {
+        if (lowerMsg.includes(keyword)) {
+          commandFound = true;
+          console.log(`Dance command: ${cmd}`);
+          triggerAnimation(cmd);
+          
+          // Add auto-response based on command
+          const responses = {
+            'C': "*starts dancing* Let's groove! 💃",
+            'J': "*jumps excitedly* Wheee! 🤸",
+            'L': "*lays down* Ahh, this is relaxing... 😌",
+            'S': "*laughs heartily* That was funny! 🤣",
+            'H': "*waves happily* Hello there! 👋"
+          };
+          
+          setTimeout(() => {
+            addAIChatMessage(responses[cmd], false);
+          }, 1000);
+          break;
+        }
+      }
+      
+      // If no command found, send to AI
+      if (!commandFound) {
+        fetchAIResponse(message);
+      }
+    }
+    
+    // Add this function
+    function addAIChatMessage(text, isUser) {
+      const chatMessages = document.getElementById('ai-chat-messages');
+      const messageEl = document.createElement('div');
+      messageEl.className = isUser ? 'message' : 'message ai-message';
+      messageEl.innerHTML = isUser 
+        ? `<strong>You:</strong> ${text}`
+        : `<strong>Buddy:</strong> ${text}`;
+      chatMessages.appendChild(messageEl);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    // Add this function
+    function fetchAIResponse(message) {
+      fetch("http://127.0.0.1:8000/chatbot/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": getCSRFToken()
+        },
+        body: JSON.stringify({ message })
+      })
+      .then(response => response.json())
+      .then(data => {
+        // Add text response to chat
+        addAIChatMessage(data.reply, false);
+        
+        // Check for bracketed animation commands in the response
+        const responseText = data.reply;
+        if (responseText.includes('[L]')) {
+          triggerAnimation('L');
+        } else if (responseText.includes('[C]')) {
+          triggerAnimation('C');
+        } else if (responseText.includes('[J]')) {
+          triggerAnimation('J');
+        } else if (responseText.includes('[S]')) {
+          triggerAnimation('S');
+        } else if (responseText.includes('[H]')) {
+          triggerAnimation('H');
+        }
+        
+        // Trigger animation if provided
+        if (data.animation) {
+          triggerAnimation(data.animation);
+        }
+      })
+      .catch(error => {
+        console.error("AI Error:", error);
+        addAIChatMessage("Buddy is resting right now...", false);
+      });
+    }
+    
+    // Add this function
+    function triggerAnimation(cmd) {
+  const animationMap = {
+    'C': 'Chicken Dance.fbx',
+    'J': 'Jumping Down.fbx',
+    'L': 'Laying.fbx',
+    'S': 'Sitting Laughing.fbx',
+    'H': 'Standing Greeting.fbx',
+    'I': 'Standing Idle.fbx'
+  };
+  
+  const animFile = animationMap[cmd];
+  if (animFile) {
+    // Clear any existing timers
+    if (window.animationResetTimer) {
+      clearTimeout(window.animationResetTimer);
+    }
+    
+    // Play animation immediately (local fallback)
+    playLocalAnimation(currentUser, animFile);
+    
+    // Also send to server (for world mode)
+    socket.emit('change_animation', animFile);
+    
+    // Set timer to return to idle
+    const animationDurations = {
+      'H': 5000, 'C': 8000, 'J': 3000, 
+      'L': 10000, 'S': 8000
+    };
+    
+    const duration = animationDurations[cmd];
+    if (duration) {
+      window.animationResetTimer = setTimeout(() => {
+        playLocalAnimation(currentUser, 'Standing Idle.fbx');
+        socket.emit('change_animation', 'Standing Idle.fbx');
+      }, duration);
+    }
+  }
+}
+
+// Add this new function for local animation handling
+function playLocalAnimation(username, animationFile) {
+  const avatar = avatarModels[username];
+  if (!avatar) return;
+
+  // Stop current animation
+  if (avatar.mixer) {
+    avatar.mixer.stopAllAction();
+  }
+
+  // Load new animation
+  const loader = new THREE.FBXLoader();
+  loader.load(
+    animationFile,
+    (animObject) => {
+      avatar.model.animations = animObject.animations;
+      avatar.mixer = new THREE.AnimationMixer(avatar.model);
+      if (animObject.animations?.length > 0) {
+        const action = avatar.mixer.clipAction(animObject.animations[0]);
+        action.play();
+      }
+    },
+    undefined,
+    (error) => console.error('Animation load error:', error)
+  );
+}
+    
+    // Add this utility function
+    function getCSRFToken() {
+      const name = "csrftoken";
+      const cookies = document.cookie.split(";");
+      for (let c of cookies) {
+        const trimmed = c.trim();
+        if (trimmed.startsWith(name + "=")) {
+          return decodeURIComponent(trimmed.split("=")[1]);
+        }
+      }
+      return "";
+    }
+    
+    // Panel toggle functions
+    function toggleSocialPanel() {
+      const panel = document.getElementById('social-panel');
+      const content = document.getElementById('social-content');
+      const chatPanel = document.getElementById('chat-panel');
+      const chatContent = document.getElementById('chat-content');
+      
+      // Toggle social panel
+      if (content.classList.contains('show')) {
+        content.classList.remove('show');
+        panel.classList.remove('expanded');
+      } else {
+        content.classList.add('show');
+        panel.classList.add('expanded');
+        // Close chat panel if open
+        chatContent.classList.remove('show');
+        chatPanel.classList.remove('expanded');
+      }
+    }
+    
+    function toggleChatPanel() {
+      const panel = document.getElementById('chat-panel');
+      const content = document.getElementById('chat-content');
+      const socialPanel = document.getElementById('social-panel');
+      const socialContent = document.getElementById('social-content');
+      
+      // Toggle chat panel
+      if (content.classList.contains('show')) {
+        content.classList.remove('show');
+        panel.classList.remove('expanded');
+      } else {
+        content.classList.add('show');
+        panel.classList.add('expanded');
+        // Close social panel if open
+        socialContent.classList.remove('show');
+        socialPanel.classList.remove('expanded');
+      }
+    }
+    
     // Start the application when DOM is loaded
-    document.addEventListener('DOMContentLoaded', init);
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('world-mode-btn').classList.remove('active');
+      document.getElementById('single-mode-btn').classList.add('active');
+      document.getElementById('mode-indicator').className = 'mode-indicator single';
+      init();
+    });
   </script>
 </body>
-</html>
+</html> 
