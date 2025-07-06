@@ -2,14 +2,30 @@ const express = require('express');
 const http = require('http');
 const socketIO = require('socket.io');
 const path = require('path');
+const cors = require('cors');
 
 const app = express();
 const server = http.createServer(app);
 
+// Add this for environment-based CORS
+const frontendUrl = process.env.FRONTEND_URL;
+
+const allowedOrigins = [
+  frontendUrl,
+  'http://localhost:3000',
+  'https://thornyphonyorigin.onrender.com',
+  'https://*.onrender.com'
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
+
 // Configure Socket.IO with proper CORS
 const io = socketIO(server, {
   cors: {
-    origin: "http://localhost:8080",
+    origin: ["http://localhost:8080", "http://localhost:3000", "https://thornyphonyorigin.onrender.com", "https://*.onrender.com"],
     methods: ["GET", "POST"],
     credentials: true
   }

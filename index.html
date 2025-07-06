@@ -1030,7 +1030,7 @@
       'idle': 'I',
       'stand': 'I'
     };
-    const socket = io('http://localhost:3000', {
+    const socket = io(window.location.origin, {
       withCredentials: true,
       transports: ['websocket'] // Force WebSocket transport
     });
