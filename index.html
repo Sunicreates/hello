@@ -1803,16 +1803,27 @@
     
     // Add this function
     function fetchAIResponse(message) {
-      fetch("http://127.0.0.1:8000/chatbot/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": getCSRFToken()
-        },
-        body: JSON.stringify({ message })
+  console.log("Sending AI request to:", "https://newone-yzub.onrender.com/chatbot/");
+  console.log("Message:", message);
+  
+  fetch("https://newone-yzub.onrender.com/chatbot/", {
+    method: "POST",
+    mode: "cors",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ message })
+  })
+      .then(response => {
+        console.log("Response status:", response.status);
+        console.log("Response headers:", response.headers);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
       })
-      .then(response => response.json())
       .then(data => {
+        console.log("AI Response data:", data);
         // Add text response to chat
         addAIChatMessage(data.reply, false);
         
@@ -1837,7 +1848,7 @@
       })
       .catch(error => {
         console.error("AI Error:", error);
-        addAIChatMessage("Buddy is resting right now...", false);
+        addAIChatMessage("Buddy is resting right now... Error: " + error.message, false);
       });
     }
     
