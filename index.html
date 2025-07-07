@@ -1621,16 +1621,8 @@
       document.getElementById('ai-chat-input').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') sendAIChatMessage();
       });
-      
-      // Socket.io events
-      socket.on('registration_success', () => {
-        currentUser = document.getElementById('username-input').value.trim();
-        document.getElementById('login-panel').style.display = 'none';
-        document.getElementById('social-panel').style.display = 'block';
-        document.getElementById('chat-panel').style.display = 'block';
-        document.getElementById('ai-chat-panel').style.display = 'block';
-        document.getElementById('mode-toggle-container').style.display = 'flex';
-        // Info panel functionality
+     
+
 document.getElementById('info-panel').addEventListener('click', () => {
   document.getElementById('info-content').style.display = 'block';
 });
@@ -1648,6 +1640,17 @@ document.addEventListener('click', (e) => {
     infoContent.style.display = 'none';
   }
 });
+      
+      // Socket.io events
+      socket.on('registration_success', () => {
+        currentUser = document.getElementById('username-input').value.trim();
+        document.getElementById('login-panel').style.display = 'none';
+        document.getElementById('social-panel').style.display = 'block';
+        document.getElementById('chat-panel').style.display = 'block';
+        document.getElementById('ai-chat-panel').style.display = 'block';
+        document.getElementById('mode-toggle-container').style.display = 'flex';
+        // Info panel functionality
+
         
         // Load default avatar
         loadAvatarModel(currentUser, 'Standing Idle.fbx');
