@@ -61,6 +61,72 @@
   font-size: 24px;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
+#info-panel {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 40px;
+  height: 40px;
+  background: rgba(20, 20, 20, 0.85);
+  border: 2px solid #333;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+  pointer-events: auto;
+  color: #4a86e8;
+  font-weight: bold;
+  font-size: 20px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.3);
+}
+
+#info-panel:hover {
+  background: rgba(30, 30, 30, 0.9);
+  transform: scale(1.1);
+}
+
+#info-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(20, 20, 20, 0.95);
+  border: 2px solid #4a86e8;
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 80%;
+  width: 400px;
+  max-height: 80vh;
+  overflow-y: auto;
+  z-index: 1001;
+  display: none;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+#info-content h3 {
+  color: #4a86e8;
+  margin-top: 0;
+  border-bottom: 1px solid #4a86e8;
+  padding-bottom: 10px;
+}
+
+#info-content p {
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+#close-info {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #e0e8e0;
+  font-size: 20px;
+  cursor: pointer;
+}
 
 /* Input field styling */
 #username-input {
@@ -998,6 +1064,14 @@
       <button id="world-mode-btn" class="mode-btn active">World Mode</button>
       <button id="single-mode-btn" class="mode-btn">Single Mode</button>
     </div>
+      <div id="info-panel">i</div>
+<div id="info-content">
+  <button id="close-info">&times;</button>
+  <h3>Buddy.io Info</h3>
+  <p><strong>Single Mode:</strong> This is a single-player mode where only you can interact with your avatar in a private space.</p>
+  <p><strong>World Mode:</strong> In this mode, any user who has opted into the world mode can join and interact with you and your avatar. It's a shared space designed for multiplayer fun.</p>
+  <p><strong>Note:</strong> The user interface supports up to 3 avatars in world mode. Anyone can join—have fun!</p>
+</div>
     
 <div id="login-panel" class="panel">
   <h2>WeLcome to Buddyyy !!</h2>
@@ -1556,6 +1630,24 @@
         document.getElementById('chat-panel').style.display = 'block';
         document.getElementById('ai-chat-panel').style.display = 'block';
         document.getElementById('mode-toggle-container').style.display = 'flex';
+        // Info panel functionality
+document.getElementById('info-panel').addEventListener('click', () => {
+  document.getElementById('info-content').style.display = 'block';
+});
+
+document.getElementById('close-info').addEventListener('click', () => {
+  document.getElementById('info-content').style.display = 'none';
+});
+
+// Close info panel when clicking outside
+document.addEventListener('click', (e) => {
+  const infoContent = document.getElementById('info-content');
+  if (infoContent.style.display === 'block' && 
+      !e.target.closest('#info-content') && 
+      e.target.id !== 'info-panel') {
+    infoContent.style.display = 'none';
+  }
+});
         
         // Load default avatar
         loadAvatarModel(currentUser, 'Standing Idle.fbx');
