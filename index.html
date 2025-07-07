@@ -39,13 +39,72 @@
   text-align: center;
     }
     
-    #login-panel {
-  width: 320px;
-      position: absolute;
-  top: 45%; /* Moved up from 50% */
-      left: 50%;
-  transform: translate(-50%, -45%);
-    }
+   #login-panel {
+  width: 90%;
+  max-width: 320px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 20px;
+  box-sizing: border-box;
+  background: rgba(20, 20, 20, 0.95);
+  border: 2px solid #4a86e8;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(74, 134, 232, 0.5);
+  text-align: center;
+}
+
+#login-panel h2 {
+  color: #4a86e8;
+  margin-bottom: 20px;
+  font-size: 24px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Input field styling */
+#username-input {
+  width: 100%;
+  padding: 12px 15px;
+  margin: 10px 0;
+  border: 2px solid #333;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  color: #e0e8e0;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+#username-input:focus {
+  border-color: #4a86e8;
+  outline: none;
+  box-shadow: 0 0 8px rgba(74, 134, 232, 0.5);
+}
+
+/* Button styling */
+#login-button {
+  background: linear-gradient(135deg, #4a86e8, #3a76d8);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+#login-button:hover {
+  background: linear-gradient(135deg, #5a96f8, #4a86e8);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+}
+
+#login-button:active {
+  transform: translateY(0);
+}
     
     #social-panel {
       width: 120px;
@@ -386,28 +445,27 @@
     /* Responsive Design - Mobile First Approach */
     
     /* Small Mobile Screens (320px - 480px) */
-    @media screen and (max-width: 480px) {
-      #login-panel {
-        width: 90vw;
-        min-width: 140px;
-        max-width: 240px;
-        top: 38%;
-        transform: translate(-50%, -38%);
-        padding: 8px;
-      }
-      #login-panel h2 {
-        font-size: 15px;
-        margin-bottom: 8px;
-      }
-      #username-input {
-        width: 100%;
-        padding: 4px;
-        font-size: 11px;
-      }
-      #login-button {
-        padding: 6px 10px;
-        font-size: 11px;
-      }
+ @media screen and (max-width: 480px) {
+  #login-panel {
+    width: 85%;
+    padding: 15px;
+  }
+  
+  #login-panel h2 {
+    font-size: 20px;
+    margin-bottom: 15px;
+  }
+  
+  #username-input {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  
+  #login-button {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+}
       #social-panel {
         width: 18vw;
         min-width: 40px;
