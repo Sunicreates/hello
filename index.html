@@ -64,7 +64,7 @@
 
 /* Input field styling */
 #username-input {
-  width: 100%;
+  /* Remove width: 100% */
   padding: 12px 15px;
   margin: 10px 0;
   border: 2px solid #333;
@@ -998,16 +998,16 @@
       <button id="single-mode-btn" class="mode-btn">Single Mode</button>
     </div>
     
-    <div id="login-panel" class="panel">
-      <h2>WeLcome to Buddyyy !!</h2>
-      <div>
-        <label for="username-input">Buddy Name :</label>
-        <input type="text" id="username-input" placeholder="ABC....">
-      </div>
-      <div style="margin-top: 15px;">
-        <button id="login-button">Talk to buddy</button>
-      </div>
-    </div>
+<div id="login-panel" class="panel">
+  <h2>WeLcome to Buddyyy !!</h2>
+  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+    <label for="username-input" style="white-space: nowrap;">Buddy Name :</label>
+    <input type="text" id="username-input" placeholder="ABC...." style="flex-grow: 1;">
+  </div>
+  <div>
+    <button id="login-button">Talk to buddy</button>
+  </div>
+</div>
     
     <div id="social-panel" class="panel">
       <div class="panel-header">Online Players</div>
