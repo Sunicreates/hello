@@ -64,7 +64,6 @@
 
 /* Input field styling */
 #username-input {
-  /* Remove width: 100% */
   padding: 12px 15px;
   margin: 10px 0;
   border: 2px solid #333;
@@ -73,6 +72,7 @@
   color: #e0e8e0;
   font-size: 16px;
   box-sizing: border-box;
+  /* Remove width: 100% */
 }
 
 #username-input:focus {
@@ -445,7 +445,7 @@
     /* Responsive Design - Mobile First Approach */
     
     /* Small Mobile Screens (320px - 480px) */
- @media screen and (max-width: 480px) {
+@media screen and (max-width: 480px) {
   #login-panel {
     width: 85%;
     padding: 15px;
@@ -457,6 +457,7 @@
   }
   
   #username-input {
+    width: 140px; /* Smaller width for mobile */
     padding: 10px 12px;
     font-size: 14px;
   }
@@ -1002,13 +1003,12 @@
   <h2>WeLcome to Buddyyy !!</h2>
   <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
     <label for="username-input" style="white-space: nowrap;">Buddy Name :</label>
-    <input type="text" id="username-input" placeholder="ABC...." style="flex-grow: 1;">
+    <input type="text" id="username-input" placeholder="ABC...." style="width: 180px;">
   </div>
   <div>
     <button id="login-button">Talk to buddy</button>
   </div>
 </div>
-    
     <div id="social-panel" class="panel">
       <div class="panel-header">Online Players</div>
       <div class="panel-content" id="social-content">
